@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="tn" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Vitrina TakTak | The #1 Store Builder</title>
+    <meta name="description" content="Create your online store in seconds. Vitrina TakTak is the best solution for Tunisian sellers.">
+    
+    <!-- LIBRARIES -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@600;800&display=swap" rel="stylesheet">
+    
+    <!-- LUXURY STYLES -->
+    <style>
+        .hidden { display: none !important; }
+        :root { --bg: #050505; --card: #141414; --gold: #D4AF37; --gold-light: #F9E59E; }
+        
+        body { 
+            font-family: 'Tajawal', sans-serif; 
+            background-color: var(--bg); 
+            color: white; 
+            -webkit-tap-highlight-color: transparent; 
+        }
+
+        /* PREMIUM BACKGROUND (Shared) */
+        .hero-bg {
+            background-image: url('https://images.unsplash.com/photo-1634148778848-26217e2dfb9f?q=80&w=2070&auto=format&fit=crop'); 
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed; /* Parallax Effect */
+            background-repeat: no-repeat;
+        }
+        .hero-overlay {
+            background: linear-gradient(to bottom, rgba(0,0,0,0.85), rgba(5,5,5,1));
+        }
+
+        /* Gold Gradient Text */
+        .text-gradient {
+            background: linear-gradient(to right, #D4AF37, #F9E59E, #D4AF37);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-size: 200% auto;
+            animation: shine 4s linear infinite;
+        }
+        @keyframes shine { to { background-position: 200% center; } }
+
+        /* Glassmorphism */
+        .glass {
+            background: rgba(20, 20, 20, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(212, 175, 55, 0.15);
+        }
+
+        /* Beta Badge */
+        .badge-beta {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #b8860b 0%, #ffd700 100%);
+            color: black;
+            font-size: 0.65rem;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            transform: translateY(-5px);
+            box-shadow: 0 2px 10px rgba(212, 175, 55, 0.2);
+        }
+
+        /* Buttons */
+        .btn-gold {
+            background: linear-gradient(45deg, var(--gold), #b5952f);
+            color: black;
+            font-weight: 800;
+            box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3);
+            transition: transform 0.2s;
+        }
+        .btn-gold:active { transform: scale(0.95); }
+
+        /* Loader */
+        .loader { border: 3px solid #333; border-top: 3px solid var(--gold); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 20px auto; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        /* Ad Slot */
+        .ad-slot { background: #111; border: 1px dashed #333; min-height: 100px; display: flex; align-items: center; justify-content: center; border-radius: 8px; margin: 20px 0; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <!-- 1. LOADING SCREEN -->
+    <div id="loading-screen" class="fixed inset-0 bg-black z-50 flex flex-col items-center justify-center">
+        <div class="loader"></div>
+        <p class="text-[var(--gold)] text-xs font-bold tracking-widest mt-2">VITRINA TAKTAK</p>
+    </div>
+
+    <!-- 2. MARKETING LANDING PAGE -->
+    <div id="landing-page" class="hidden w-full">
+        
+        <!-- Navbar -->
+        <nav class="fixed top-0 w-full z-40 bg-black/90 backdrop-blur border-b border-gray-800">
+            <div class="max-w-6xl mx-auto px-5 h-16 flex justify-between items-center">
+                <div class="flex items-center gap-1 cursor-pointer" onclick="window.location.href='/'">
+                    <span class="text-[var(--gold)] font-bold text-xl tracking-wider">VITRINA.</span>
+                    <span class="badge-beta">BETA</span>
+                </div>
+                <!-- Lang Switch -->
+                <div class="flex bg-gray-900 rounded-full p-1 border border-gray-800">
+                    <button onclick="setLang('tn')" id="btn-lp-tn" class="text-xs px-3 py-1 rounded-full text-gray-400 font-bold transition hover:text-white">TN</button>
+                    <button onclick="setLang('fr')" id="btn-lp-fr" class="text-xs px-3 py-1 rounded-full text-gray-400 font-bold transition hover:text-white">FR</button>
+                    <button onclick="setLang('ar')" id="btn-lp-ar" class="text-xs px-3 py-1 rounded-full text-gray-400 font-bold transition hover:text-white">ع</button>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Hero -->
+        <header class="hero-bg relative pt-32 pb-20 px-6 text-center">
+            <div class="absolute inset-0 hero-overlay"></div>
+            <div class="relative z-10 max-w-2xl mx-auto">
+                <span id="txt-badge" class="inline-block border border-[var(--gold)] text-[var(--gold)] text-[10px] font-bold px-3 py-1 rounded-full mb-6 tracking-widest uppercase">
+                    THE #1 SALES TOOL
+                </span>
+                <h1 class="text-4xl sm:text-6xl font-extrabold mb-6 leading-tight">
+                    <span id="txt-hero-1">Don't just sell.</span> <br>
+                    <span class="text-gradient" id="txt-hero-2">Dominate the market.</span>
+                </h1>
+                <p id="txt-subhero" class="text-gray-300 text-lg mb-8 font-light max-w-md mx-auto leading-relaxed">
+                    Raja3 el business mte3ek Pro. Lien wa7ed fih el produit mte3ek lkol, w les commandes ijouk mnadhmine 3al WhatsApp.
+                </p>
+                <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                    <button onclick="contactSales()" id="btn-cta-main" class="btn-gold py-4 px-10 rounded-full text-lg">
+                        Start Now
+                    </button>
+                    <a href="?store=demo" id="btn-demo" class="border border-white/30 text-white font-bold py-4 px-10 rounded-full text-lg hover:bg-white/10 transition-colors">
+                        View Demo
+                    </a>
+                </div>
+            </div>
+        </header>
+
+        <!-- ADSENSE SLOT 1 -->
+        <div class="max-w-4xl mx-auto px-6 relative z-10 -mt-8">
+            <div class="ad-slot bg-[#111] shadow-2xl border-gray-800">
+                <span class="text-gray-600 text-xs">Advertisement Space</span>
+            </div>
+        </div>
+
+        <!-- Value Proposition -->
+        <section class="py-16 px-6 bg-[#0a0a0a]">
+            <div class="max-w-4xl mx-auto">
+                <h2 id="txt-steps-title" class="text-3xl font-bold text-center mb-12 text-white">Why Vitrina?</h2>
+                <div class="grid md:grid-cols-3 gap-6">
+                    <div class="glass p-6 rounded-xl text-center">
+                        <div class="text-4xl mb-4">🔗</div>
+                        <h3 id="txt-s1-t" class="text-lg font-bold text-[var(--gold)] mb-2">One Link</h3>
+                        <p id="txt-s1-d" class="text-gray-400 text-sm">Description 1</p>
+                    </div>
+                    <div class="glass p-6 rounded-xl text-center">
+                        <div class="text-4xl mb-4">🚀</div>
+                        <h3 id="txt-s2-t" class="text-lg font-bold text-[var(--gold)] mb-2">We Build It</h3>
+                        <p id="txt-s2-d" class="text-gray-400 text-sm">Description 2</p>
+                    </div>
+                    <div class="glass p-6 rounded-xl text-center">
+                        <div class="text-4xl mb-4">💬</div>
+                        <h3 id="txt-s3-t" class="text-lg font-bold text-[var(--gold)] mb-2">Direct Orders</h3>
+                        <p id="txt-s3-d" class="text-gray-400 text-sm">Description 3</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Pricing -->
+        <section class="py-16 px-6 border-t border-gray-900 bg-black">
+            <div class="max-w-lg mx-auto bg-gradient-to-b from-[#151515] to-black border border-[var(--gold)] rounded-3xl p-8 relative overflow-hidden shadow-2xl">
+                <div class="absolute top-0 left-0 w-full h-1 bg-[var(--gold)]"></div>
+                <div class="text-center">
+                    <h2 id="txt-plan" class="text-xl font-bold text-white mb-2">Pro Plan</h2>
+                    <div class="text-5xl font-extrabold text-[var(--gold)] mb-6">
+                        30 <span class="text-xl text-gray-500">TND</span> <span id="txt-month" class="text-sm font-normal text-gray-400">/mo</span>
+                    </div>
+                </div>
+                <ul class="text-sm text-gray-400 space-y-3 mb-8 px-4">
+                    <li class="flex items-center gap-3"><span class="text-[var(--gold)]">✓</span> <span id="txt-feat-1">Hosting</span></li>
+                    <li class="flex items-center gap-3"><span class="text-[var(--gold)]">✓</span> <span id="txt-feat-2">Database</span></li>
+                    <li class="flex items-center gap-3"><span class="text-[var(--gold)]">✓</span> <span id="txt-feat-3">Support</span></li>
+                    <li class="flex items-center gap-3 pt-2 border-t border-gray-800"><span class="text-white">⚠</span> <span id="txt-feat-4" class="text-white font-bold">Limit</span></li>
+                </ul>
+                <button onclick="contactSales()" id="btn-cta-price" class="w-full bg-[#25D366] hover:bg-[#1ebc57] text-white font-bold py-4 rounded-xl text-lg flex items-center justify-center gap-2">
+                    Subscribe WhatsApp
+                </button>
+            </div>
+        </section>
+
+        <footer class="py-8 text-center border-t border-gray-900 bg-black">
+            <div class="flex justify-center gap-6 mb-4 text-xs text-gray-500">
+                <button onclick="toggleLegal('privacy')" class="hover:text-[var(--gold)]">Privacy Policy</button>
+                <button onclick="toggleLegal('terms')" class="hover:text-[var(--gold)]">Terms of Service</button>
+            </div>
+            <p class="text-gray-700 text-[10px]">&copy; 2024 Vitrina TakTak.</p>
+        </footer>
+    </div>
+
+    <!-- 3. STORE APP (CLIENT VIEW) -->
+    <div id="store-app" class="hidden flex-1 flex-col pb-32 hero-bg relative min-h-screen">
+        <div class="absolute inset-0 bg-[#050505]/95"></div> <!-- Dark Overlay for store -->
+        
+        <!-- Store Header -->
+        <header class="sticky top-0 z-30 bg-black/80 backdrop-blur border-b border-gray-800">
+            <div class="relative z-10 p-4 flex justify-between items-center max-w-2xl mx-auto">
+                <div>
+                    <h1 id="store-name" class="text-lg font-bold text-white shadow-black drop-shadow-md">Loading...</h1>
+                    <p id="txt-store-verified" class="text-[10px] text-[var(--gold)] font-medium uppercase tracking-widest">● Verified Seller</p>
+                </div>
+                
+                <div class="flex items-center gap-3">
+                    <!-- STORE LANGUAGE SWITCHER -->
+                    <div class="flex bg-gray-900 rounded-full p-0.5 border border-gray-800">
+                        <button onclick="setLang('tn')" id="btn-st-tn" class="text-[10px] px-2 py-1 rounded-full text-gray-400 font-bold">TN</button>
+                        <button onclick="setLang('fr')" id="btn-st-fr" class="text-[10px] px-2 py-1 rounded-full text-gray-400 font-bold">FR</button>
+                        <button onclick="setLang('ar')" id="btn-st-ar" class="text-[10px] px-2 py-1 rounded-full text-gray-400 font-bold">ع</button>
+                    </div>
+
+                    <div onclick="toggleCartModal()" class="relative p-2 cursor-pointer bg-white/10 rounded-full hover:bg-white/20 transition">
+                        <span class="text-lg">🛒</span>
+                        <span id="cart-badge" class="hidden absolute -top-1 -right-1 bg-red-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full shadow-sm">0</span>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <main id="product-list" class="relative z-10 p-4 grid grid-cols-2 gap-3 sm:gap-4 max-w-2xl mx-auto w-full"></main>
+        
+        <!-- Store Ad Slot -->
+        <div class="px-4 max-w-2xl mx-auto w-full relative z-10">
+            <div class="ad-slot"><span class="text-gray-600 text-xs">Advertisement</span></div>
+        </div>
+        
+        <footer class="text-center py-4 relative z-10">
+             <a href="/" class="text-[10px] text-gray-600 hover:text-[var(--gold)]">Powered by Vitrina TakTak</a>
+        </footer>
+    </div>
+
+    <!-- Floating Cart Bar -->
+    <div id="cart-bar" class="hidden fixed bottom-0 left-0 w-full bg-[var(--card)] border-t border-gray-800 p-4 z-40 shadow-2xl">
+        <div class="flex justify-between items-center max-w-2xl mx-auto">
+            <div>
+                <span id="txt-bar-total" class="text-gray-400 text-xs">Total</span><br>
+                <span id="bar-total" class="text-[var(--gold)] font-bold text-xl">0.000 TND</span>
+            </div>
+            <button onclick="toggleCartModal()" id="btn-view-cart" class="bg-[var(--gold)] text-black font-bold py-2 px-6 rounded-lg text-sm shadow-lg hover:brightness-110">
+                VIEW CART
+            </button>
+        </div>
+    </div>
+
+    <!-- CART MODAL -->
+    <div id="cart-modal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center">
+        <div class="bg-[var(--card)] w-full max-w-md rounded-t-2xl sm:rounded-2xl border border-gray-800 p-6 flex flex-col max-h-[85vh]">
+            <div class="flex justify-between items-center mb-4 border-b border-gray-800 pb-4">
+                <h2 id="txt-modal-title" class="text-xl font-bold text-white">Your Order</h2>
+                <button onclick="toggleCartModal()" class="text-gray-500 hover:text-white text-xl">✕</button>
+            </div>
+            <div id="cart-items-container" class="overflow-y-auto flex-1 mb-4 space-y-3"></div>
+            <div class="border-t border-gray-800 pt-4">
+                <div class="flex justify-between items-center mb-4">
+                    <span id="txt-modal-total-label" class="text-gray-300">Total:</span>
+                    <span id="modal-total" class="text-[var(--gold)] font-bold text-2xl">0.000 TND</span>
+                </div>
+                <button id="store-whatsapp-btn" class="w-full bg-[#25D366] hover:bg-[#1ebc57] text-white font-bold py-3 rounded-lg flex items-center justify-center gap-2 uppercase tracking-wide">
+                    Confirm Order
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- LEGAL MODAL -->
+    <div id="legal-modal" class="hidden fixed inset-0 z-50 bg-black/95 flex items-center justify-center p-4">
+        <div class="bg-[#111] w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-xl border border-gray-800 p-6">
+            <div class="flex justify-between items-center mb-6">
+                <h2 id="legal-title" class="text-xl font-bold text-[var(--gold)]">Legal</h2>
+                <button onclick="document.getElementById('legal-modal').classList.add('hidden')" class="text-white hover:text-red-500 font-bold">✕</button>
+            </div>
+            <div id="legal-content" class="text-gray-300 text-sm space-y-4 leading-relaxed font-light"></div>
+        </div>
+    </div>
+
+    <!-- 4. JAVASCRIPT ENGINE -->
+    <script>
+        // CONFIG
+        const DB_URL = 'https://gcsaxziigmykohpzguka.supabase.co';
+        const DB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdjc2F4emlpZ215a29ocHpndWthIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAwMzAyNDgsImV4cCI6MjA4NTYwNjI0OH0.wBFyqVQorHFLztoqiGZid43-ZqNONAVrikMZcKkb0gg';
+        const MY_PHONE = '21622747298';
+
+        // STATE
+        const db = supabase.createClient(DB_URL, DB_KEY);
+        let cart = {};
+        let storePhone = "";
+        let currentLang = 'tn';
+        let productsMap = {};
+        let globalProductList = []; // Need this for re-rendering
+
+        // CONTENT
+        const content = {
+            fr: {
+                // Landing
+                badge: "La Solution #1", hero1: "Ne vendez pas juste.", hero2: "Dominez le marché.",
+                subhero: "La méthode professionnelle pour vendre sans site web compliqué. Commandes sur WhatsApp.",
+                ctaMain: "Commencer", demo: "Voir Démo", stepsT: "Pourquoi Vitrina ?",
+                s1t: "Lien Pro", s1d: "Remplacez 'Prix en privé'.", s2t: "On s'occupe de tout", s2d: "On crée votre base.",
+                s3t: "Commandes Directes", s3d: "Le client choisit, vous recevez la commande.",
+                plan: "Pack Pro", month: "/ mois", ctaText: "S'abonner via WhatsApp",
+                waMsg: "Bonjour, je suis intéressé par Vitrina TakTak (30 TND/mois).",
+                feat1: "Hébergement Inclus", feat2: "Base de Données", feat3: "Support 24/7", feat4: "Max 10 Produits",
+                // Store UI
+                verified: "● Vendeur Vérifié",
+                addBtn: "AJOUTER",
+                total: "Total",
+                viewCart: "VOIR PANIER",
+                yourOrder: "Votre Commande",
+                confirm: "CONFIRMER COMMANDE"
+            },
+            tn: {
+                // Landing
+                badge: "Aqwa Solution fi Tounes", hero1: "Mouch just tbi3.", hero2: "Fok blastek fel marché.",
+                subhero: "Raja3 el business mte3ek Pro. Lien wa7ed fih el produit mte3ek lkol, w les commandes ijouk mnadhmine 3al WhatsApp.",
+                ctaMain: "Abda Taw", demo: "Chouf Demo", stepsT: "3lech Vitrina ?",
+                s1t: "Lien Wa7ed Pro", s1d: "Yezzi mel 'Prix privé'. 7ott lien l'boutique mte3ek fi Bio w rta7.",
+                s2t: "Na7na Ntkalfou Bel Ba9i", s2d: "Ab3ath tasawer, w a7na n7athroulek el Site kamel.",
+                s3t: "Commandes Sahline", s3d: "Klyonetek yekhtaru b'sohoula, w inti tijik l'commande 7athra.",
+                plan: "Pack Pro", month: "/ chhar", ctaText: "Aboni Taw (WhatsApp)",
+                waMsg: "Salem, n7eb naboni fi Vitrina TakTak (30 TND/chhar).",
+                feat1: "Hébergement Blech", feat2: "Base de Données 7athra", feat3: "Support 24/7", feat4: "Max 10 Produits",
+                // Store UI
+                verified: "● Baye3 Mwatheq",
+                addBtn: "ZID FEL PANIER",
+                total: "L'somme",
+                viewCart: "CHOUF PANIER",
+                yourOrder: "Commande Mte3ek",
+                confirm: "3ADDI COMMANDE"
+            },
+            ar: {
+                // Landing
+                badge: "الحل رقم 1 في تونس", hero1: "لا تبيع فقط.", hero2: "سيطر على السوق.",
+                subhero: "الطريقة الاحترافية للبيع. رابط واحد. طلبات مباشرة على واتساب.",
+                ctaMain: "ابدأ الآن", demo: "شاهد مثال", stepsT: "لماذا فيترينا؟",
+                s1t: "رابط احترافي", s1d: "استبدل 'السعر على الخاص' بمتجر احترافي.",
+                s2t: "نحن نبنيه لك", s2d: "أرسل الصور ونحن ننشئ قاعدة البيانات.",
+                s3t: "طلبات جاهزة", s3d: "تصلك الفاتورة جاهزة على واتساب.",
+                plan: "الباقة الاحترافية", month: "/ شهرياً", ctaText: "اشترك عبر واتساب",
+                waMsg: "مرحبا، أريد الاشتراك في خدمة فيترينا تاك تاك.",
+                feat1: "استضافة مجانية", feat2: "قواعد البيانات", feat3: "دعم 24/7", feat4: "10 منتجات كحد أقصى",
+                // Store UI
+                verified: "● بائع موثوق",
+                addBtn: "إضافة للسلة",
+                total: "المجموع",
+                viewCart: "عربة التسوق",
+                yourOrder: "طلبيتك",
+                confirm: "تأكيد الطلب"
+            }
+        };
+
+        // DOM ELEMENTS
+        const els = {
+            loading: document.getElementById('loading-screen'),
+            landing: document.getElementById('landing-page'),
+            storeApp: document.getElementById('store-app'),
+            // Landing Text
+            badge: document.getElementById('txt-badge'), hero1: document.getElementById('txt-hero-1'), hero2: document.getElementById('txt-hero-2'), subhero: document.getElementById('txt-subhero'),
+            ctaMain: document.getElementById('btn-cta-main'), demo: document.getElementById('btn-demo'), stepsT: document.getElementById('txt-steps-title'),
+            s1t: document.getElementById('txt-s1-t'), s1d: document.getElementById('txt-s1-d'), s2t: document.getElementById('txt-s2-t'), s2d: document.getElementById('txt-s2-d'), s3t: document.getElementById('txt-s3-t'), s3d: document.getElementById('txt-s3-d'),
+            plan: document.getElementById('txt-plan'), month: document.getElementById('txt-month'), ctaText: document.getElementById('txt-cta-text'),
+            feat1: document.getElementById('txt-feat-1'), feat2: document.getElementById('txt-feat-2'), feat3: document.getElementById('txt-feat-3'), feat4: document.getElementById('txt-feat-4'),
+            // Store Elements
+            list: document.getElementById('product-list'), name: document.getElementById('store-name'),
+            cartBar: document.getElementById('cart-bar'), barTotal: document.getElementById('bar-total'),
+            modal: document.getElementById('cart-modal'), modalList: document.getElementById('cart-items-container'),
+            modalTotal: document.getElementById('modal-total'), waBtn: document.getElementById('store-whatsapp-btn'),
+            badgeNum: document.getElementById('cart-badge'),
+            // Store UI Text
+            txtVerified: document.getElementById('txt-store-verified'),
+            txtBarTotal: document.getElementById('txt-bar-total'),
+            btnViewCart: document.getElementById('btn-view-cart'),
+            txtModalTitle: document.getElementById('txt-modal-title'),
+            txtModalTotalLabel: document.getElementById('txt-modal-total-label')
+        };
+
+        // --- INIT ---
+        async function init() {
+            const savedLang = localStorage.getItem('vt_lang');
+            const params = new URLSearchParams(window.location.search);
+            const slug = params.get('store');
+            
+            // Set Default Lang
+            setLang(savedLang || 'tn');
+
+            if(!slug) {
+                els.loading.classList.add('hidden');
+                els.landing.classList.remove('hidden');
+            } else {
+                await loadStore(slug);
+            }
+        }
+
+        // --- LANG ---
+        function setLang(l) {
+            currentLang = l;
+            localStorage.setItem('vt_lang', l);
+
+            const t = content[l];
+
+            // 1. Update Buttons (Both Landing & Store)
+            ['tn','fr','ar'].forEach(x => {
+                // Landing Page Buttons
+                const bLp = document.getElementById(`btn-lp-${x}`);
+                if(bLp) { 
+                    if(x===l) { bLp.classList.add('text-[var(--gold)]'); bLp.classList.remove('text-gray-400'); }
+                    else { bLp.classList.remove('text-[var(--gold)]'); bLp.classList.add('text-gray-400'); }
+                }
+                // Store Buttons
+                const bSt = document.getElementById(`btn-st-${x}`);
+                if(bSt) {
+                     if(x===l) { bSt.classList.add('text-[var(--gold)]', 'bg-white/10'); bSt.classList.remove('text-gray-400'); }
+                    else { bSt.classList.remove('text-[var(--gold)]', 'bg-white/10'); bSt.classList.add('text-gray-400'); }
+                }
+            });
+
+            // 2. Update Content
+            // Landing
+            els.badge.innerText = t.badge; els.hero1.innerText = t.hero1; els.hero2.innerText = t.hero2;
+            els.subhero.innerText = t.subhero; els.ctaMain.innerText = t.ctaMain; els.demo.innerText = t.demo;
+            els.stepsT.innerText = t.stepsT;
+            els.s1t.innerText = t.s1t; els.s1d.innerText = t.s1d; els.s2t.innerText = t.s2t; els.s2d.innerText = t.s2d; els.s3t.innerText = t.s3t; els.s3d.innerText = t.s3d;
+            els.plan.innerText = t.plan; els.month.innerText = t.month; els.ctaText.innerText = t.ctaText;
+            els.feat1.innerText = t.feat1; els.feat2.innerText = t.feat2; els.feat3.innerText = t.feat3; els.feat4.innerText = t.feat4;
+
+            // Store UI
+            els.txtVerified.innerText = t.verified;
+            els.txtBarTotal.innerText = t.total;
+            els.btnViewCart.innerText = t.viewCart;
+            els.txtModalTitle.innerText = t.yourOrder;
+            els.txtModalTotalLabel.innerText = t.total + ":";
+            els.waBtn.innerText = t.confirm;
+
+            // 3. Re-render products if we are in store mode to update button text
+            if(!els.storeApp.classList.contains('hidden') && globalProductList.length > 0) {
+                renderProducts(globalProductList);
+            }
+
+            document.documentElement.dir = l==='ar'?'rtl':'ltr';
+        }
+
+        function contactSales() {
+            window.open(`https://wa.me/${MY_PHONE}?text=${encodeURIComponent(content[currentLang].waMsg)}`, '_blank');
+        }
+
+        function toggleLegal(type) {
+            document.getElementById('legal-modal').classList.remove('hidden');
+            const c = document.getElementById('legal-content');
+            c.innerHTML = type === 'privacy' 
+                ? "<p><strong>Privacy:</strong> We don't collect data. All orders are on WhatsApp.</p>" 
+                : "<p><strong>Terms:</strong> We are a tool provider. We are not responsible for sales.</p>";
+        }
+
+        // --- STORE ---
+        async function loadStore(slug) {
+            try {
+                const { data: store } = await db.from('stores').select('*').eq('slug', slug).single();
+                if(!store) throw new Error();
+                storePhone = store.phone;
+                els.name.innerText = store.name;
+                document.title = store.name;
+
+                const { data: products } = await db.from('products').select('*').eq('store_slug', slug).order('created_at');
+                globalProductList = products; // Save for re-renders
+                renderProducts(products);
+                
+                els.loading.classList.add('hidden');
+                els.storeApp.classList.remove('hidden');
+            } catch {
+                window.location.href = "/";
+            }
+        }
+
+        function renderProducts(products) {
+            productsMap = {}; 
+            
+            if(!products.length) { els.list.innerHTML = "<p class='col-span-2 text-center text-gray-500 mt-10'>Empty.</p>"; return; }
+            
+            els.list.innerHTML = products.map(p => {
+                const price = parseFloat(p.price).toFixed(3);
+                productsMap[p.id] = p;
+                
+                // CHECK IF ITEM IS IN CART
+                const inCart = cart[p.id] ? cart[p.id].qty : 0;
+                
+                let btnHtml = '';
+                
+                if (inCart === 0) {
+                    // Default "Add to Cart" Button
+                    btnHtml = `
+                    <button onclick="updateCart('${p.id}', 1)" 
+                        class="mt-3 w-full bg-[#222] hover:bg-[var(--gold)] hover:text-black border border-gray-700 hover:border-[var(--gold)] text-white text-[10px] font-bold py-2.5 rounded transition-colors uppercase tracking-wider">
+                        ${content[currentLang].addBtn} +
+                    </button>`;
+                } else {
+                    // QTY Controls [ - 1 + ]
+                    btnHtml = `
+                    <div class="mt-3 w-full flex items-center justify-between bg-black border border-[var(--gold)] rounded overflow-hidden">
+                        <button onclick="updateCart('${p.id}', -1)" class="w-1/3 py-2 text-[var(--gold)] hover:bg-[var(--gold)] hover:text-black font-bold text-lg transition">-</button>
+                        <span class="text-white text-sm font-bold">${inCart}</span>
+                        <button onclick="updateCart('${p.id}', 1)" class="w-1/3 py-2 text-[var(--gold)] hover:bg-[var(--gold)] hover:text-black font-bold text-lg transition">+</button>
+                    </div>`;
+                }
+
+                return `
+                <div class="bg-[#141414]/90 backdrop-blur rounded-xl overflow-hidden border border-gray-800 flex flex-col shadow-lg">
+                    <div class="h-32 bg-gray-800 relative group">
+                        ${p.image ? `<img src="${p.image}" class="w-full h-full object-cover transition duration-500 group-hover:scale-110">` : '<div class="flex h-full items-center justify-center text-gray-600 text-xs">No Img</div>'}
+                    </div>
+                    <div class="p-3 flex flex-col flex-1">
+                        <h3 class="text-white font-medium text-xs sm:text-sm line-clamp-2 h-9 leading-tight">${p.name}</h3>
+                        <p class="text-[var(--gold)] font-bold text-lg mt-1">${price} <span class="text-[10px] text-gray-400">TND</span></p>
+                        ${btnHtml}
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        // --- SMART CART LOGIC ---
+        function updateCart(id, change) {
+            if (!cart[id]) {
+                const product = productsMap[id];
+                if (!product) return;
+                cart[id] = { qty: 0, name: product.name, price: product.price };
+            }
+
+            cart[id].qty += change;
+            if (cart[id].qty <= 0) delete cart[id];
+            
+            updateTotals();
+            
+            // Re-render the specific part of the UI? 
+            // For Simplicity in Broke Stack: Re-render all products to update the buttons
+            renderProducts(globalProductList); 
+            
+            if(!els.modal.classList.contains('hidden')) renderCartItems();
+        }
+
+        function updateTotals() {
+            let total = 0, count = 0;
+            for (let id in cart) { total += cart[id].qty * cart[id].price; count += cart[id].qty; }
+            
+            const txt = total.toFixed(3) + " TND";
+            els.barTotal.innerText = txt;
+            els.modalTotal.innerText = txt;
+            els.badgeNum.innerText = count;
+
+            if (count > 0) {
+                els.badgeNum.classList.remove('hidden');
+                els.cartBar.classList.remove('hidden');
+            } else {
+                els.badgeNum.classList.add('hidden');
+                els.cartBar.classList.add('hidden');
+                if(!els.modal.classList.contains('hidden')) toggleCartModal();
+            }
+        }
+
+        function toggleCartModal() {
+            if (els.modal.classList.contains('hidden')) {
+                renderCartItems();
+                els.modal.classList.remove('hidden');
+            } else {
+                els.modal.classList.add('hidden');
+            }
+        }
+
+        function renderCartItems() {
+            let html = '';
+            let msg = "Commande: \n\n";
+            let hasItems = false;
+
+            for (let id in cart) {
+                hasItems = true;
+                const item = cart[id];
+                const totalItem = (item.qty * item.price).toFixed(3);
+                
+                html += `
+                <div class="flex justify-between items-center bg-[#111] p-3 rounded border border-gray-800">
+                    <div class="flex-1">
+                        <div class="text-white font-bold text-sm">${item.name}</div>
+                        <div class="text-[var(--gold)] text-xs">${totalItem} TND</div>
+                    </div>
+                    <div class="flex items-center gap-3 bg-gray-900 rounded px-2 py-1">
+                        <button onclick="updateCart('${id}', -1)" class="text-gray-400 hover:text-white px-1 font-bold">-</button>
+                        <span class="text-white text-sm font-bold">${item.qty}</span>
+                        <button onclick="updateCart('${id}', 1)" class="text-[var(--gold)] hover:text-white px-1 font-bold">+</button>
+                    </div>
+                </div>`;
+                
+                msg += `▪ ${item.qty}x ${item.name} (${totalItem} TND)\n`;
+            }
+
+            els.modalList.innerHTML = html;
+
+            if(hasItems) {
+                msg += `\n*TOTAL: ${els.modalTotal.innerText}*`;
+                els.waBtn.onclick = () => window.open(`https://wa.me/${storePhone}?text=${encodeURIComponent(msg)}`, '_blank');
+            }
+        }
+
+        init();
+    </script>
+</body>
+  </html>
